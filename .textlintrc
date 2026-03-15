@@ -23,7 +23,10 @@
       },
       "ja-no-mixed-period": {
         "periodMark": "。",
-        "severity": "warning"
+        "severity": "warning",
+        "allowPeriodMarks": [
+          "{open}"
+        ]
       },
       "no-double-negative-ja": true,
       "no-dropping-the-ra": true,
