@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "CV of Yuki Yoshikawa",
   description: "吉川 侑希の職務経歴書",
+  base: '/resume/',
   head: [
     ['link', { rel: 'icon', href: 'favicon/favicon.png' }],
   ],
