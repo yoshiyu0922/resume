@@ -15,7 +15,6 @@
   "devDependencies": {
     "@textlint-ja/textlint-rule-no-insert-dropping-sa": "^2.0.1",
     "autoprefixer": "^10.4.20",
-    "husky": "^5.0.0",
     "md-to-pdf": "^5.2.4",
     "postcss": "^8.4.40",
     "sass": "^1.77.8",
