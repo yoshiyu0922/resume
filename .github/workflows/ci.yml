@@ -30,7 +30,12 @@ jobs:
         uses: dorny/paths-filter@v4
         with:
           filters: |
+            shared: &shared
+              - 'package.json'
+              - 'yarn.lock'
+              - '.github/workflows/ci.yml'
             docs:
+              - *shared
               - 'docs/index.md'
     
   lint:
@@ -49,5 +54,7 @@ jobs:
           cache: yarn
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Lint with VitePress
-        run: make lint
+      - name: Build
+        run: yarn docs:build
+      - name: Lint
+        run: yarn lint
