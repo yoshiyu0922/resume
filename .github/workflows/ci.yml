@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  paths:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_changed: ${{ steps.check_paths.outputs.docs == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check if files in docs/ were changed
+        id: check_paths
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            shared: &shared
+              - 'package.json'
+              - 'yarn.lock'
+              - '.github/workflows/ci.yml'
+            docs:
+              - *shared
+              - 'docs/index.md'
+    
+  lint:
+    needs: paths
+    if: needs.paths.outputs.docs_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: yarn docs:build
+      - name: Lint
+        run: yarn lint
