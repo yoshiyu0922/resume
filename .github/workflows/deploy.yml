@@ -75,15 +75,6 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs/.vitepress/dist
-      - name: build pdf
-        if: ${{ github.event.pull_request.merged == true && github.ref_name == 'main' }}
-        run: yarn run build:pdf
-      - name: Upload PDF artifact
-        if: ${{ github.event.pull_request.merged == true && github.ref_name == 'main' }}
-        run: |
-          gh release upload ${{needs.create-release-tag.outputs.new_tag}} ./output/resume.pdf --clobber
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   deploy:
     environment:
