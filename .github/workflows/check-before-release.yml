@@ -1,0 +1,69 @@
+name: Check before Release
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - edited
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    if: ${{ github.base_ref == 'main' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check PR Title for Version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          # 正規表現でvX.X.X形式のバージョンを抽出
+          VERSION=$(echo $PR_TITLE | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+
+          # バージョンが見つからなかった場合はエラーを返す
+          if [ -z "$VERSION" ]; then
+            echo "エラー: PRタイトルにvX.X.X形式のバージョンが見つかりません" >&2
+            exit 1
+          fi
+
+          # 指定したリリースタグがすでに作成されているか確認
+          IS_ALREADY_TAG=$(gh release list -O desc --jq ".[] | select(.tagName == \"$VERSION\")| .tagName" --json tagName)
+
+          # すでに作成済みの場合はエラーを返す
+          if [ -n "$IS_ALREADY_TAG" ]; then
+            echo "エラー: 指定したリリースタグはすでに作成済みです" >&2
+            exit 1
+          fi
+
+          cat << EOF > comments
+          ### リリースタグ: $VERSION
+
+          バージョン（\`vN.N.N\`）ポリシーは以下の通りです。リリース内容を確認の上、適切なバージョンが設定されているかご確認ください。
+
+          - Major バージョン（1 つ目の N）は、**後方互換性のない** API の破壊的変更がある場合に更新します
+          - Minor バージョン（2 つ目の N）は、**後方互換性のある**機能追加や改善がある場合に更新します
+          - Patch バージョン（3 つ目の N）は、**後方互換性のある**バグ修正や小さな変更がある場合に更新します
+
+      - name: Comment to PR
+        if: ${{ github.actor != 'renovate[bot]' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ github.event.pull_request.html_url }}
+        run:
+          gh pr comment -F ./comments "${URL}"

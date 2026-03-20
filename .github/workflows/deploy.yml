@@ -1,8 +1,11 @@
 name: Deploy VitePress site to Pages
 
 on:
-  push:
-    branches: [main]
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,7 +18,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  create-release-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create and Push Tag
+        if: ${{ github.event.pull_request.merged == true && github.ref_name == 'main' }}
+        id: create_tag
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          # 正規表現でvX.X.X形式のバージョンを抽出
+          VERSION=$(echo $PR_TITLE | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+
+          # バージョンが見つからなかった場合はエラーを返す
+          if [ -z "$VERSION" ]; then
+            echo "エラー: PRタイトルにvX.X.X形式のバージョンが見つかりません" >&2
+            exit 1
+          fi
+
+          echo "NEW_TAG=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release Tag
+        if: ${{ github.event.pull_request.merged == true && github.ref_name == 'main' }}
+        run: |
+          gh release create ${{env.NEW_TAG}} --generate-notes
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
   build:
+    needs: create-release-tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
