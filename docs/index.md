@@ -382,7 +382,7 @@ layout: doc
 - **事業内容**：デジタルマーケティング事業
 - 2021 年 10 月にアクセンチュア株式会社へ吸収合併
 
-:::details 2018 年 4 月 〜 2019 年 3 月 Salesforce の EC パッケージソフトの R&D {open}
+:::details 2017 年 8 月 〜 2018 年 3 月 Salesforce の EC パッケージソフトの R&D {open}
 
 - **プロジェクト概要**：
   - Salesforce 製のクラウド型 EC パッケージ「Commerce Cloud」のキャッチアップ
